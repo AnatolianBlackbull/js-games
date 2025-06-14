@@ -7,7 +7,7 @@ import (
 
 func main() {
 
-	// Sitenin çalışacağı port
+	// Sitenin çalışacağı port loooooooooooooo
 	var port int = 8080
 
 	mux := http.NewServeMux()
