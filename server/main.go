@@ -1,11 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
-	"path/filepath"
-	"strings"
 )
 
 func main() {
@@ -29,41 +29,31 @@ func main() {
 
 }
 
+// Sayfaları sun
 func pageServe(w http.ResponseWriter, r *http.Request) {
 	baseDir := "./server"
 
 	var reqPath string = r.URL.Path
 	if reqPath == "/" {
-		reqPath = "/homepage"
+		http.ServeFile(w, r, "./homepage/index.html")
 	}
 
 	cleanPath := path.Clean(reqPath)
-	fullPath := filepath.Join(baseDir, cleanPath)
+	fmt.Println("clean path: " + cleanPath)
 
-	absBaseDir, err := filepath.Abs(baseDir)
-	if err != nil {
-		http.Error(w, "Sunucu içi hata", 500)
-		return
-	}
+	fullPath := baseDir + cleanPath + "/index.html"
+	fmt.Println(fullPath)
 
-	absFullPath, err := filepath.Abs(fullPath)
-	if err != nil {
-		http.Error(w, "Aradığınız site bulunamadı.", 500)
-		return
-	}
-
-	if !strings.HasPrefix(absFullPath, absBaseDir) {
-		http.Error(w, "İzinsiz erişim talebi", http.StatusForbidden)
-		return
-	}
-
-	pagePath := filepath.Join(absFullPath, "index.html")
-
-	finalPath, err := filepath.Abs(pagePath)
-	if err != nil {
+	if !fileExists(fullPath) {
 		http.Error(w, "Aradığınız sayfa bulunamadı.", 404)
 		return
 	}
 
-	http.ServeFile(w, r, finalPath)
+	http.ServeFile(w, r, fullPath)
+}
+
+// Dosya varlığı kontrolü
+func fileExists(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return !errors.Is(err, os.ErrNotExist)
 }
