@@ -16,8 +16,14 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Oyun isteği geldiğinde istenen oyunu, gerekli dosyalarla birlikte ver
-	gameFS := http.FileServer(http.Dir("./games"))
+	gameFS := http.FileServer(http.Dir("../games"))
 	mux.Handle("/games/", http.StripPrefix("/games/", gameFS))
+
+	// CSS ve JS dosyalarını döndür
+	// CSS için <link type="style" href="/files/homepage/style.css" /> biçiminde,
+	// JS için <script src="/files/homepage/code.js" /> biçiminde yazmak gerekecek
+	additionalFS := http.FileServer(http.Dir("../server"))
+	mux.Handle("/files/", http.StripPrefix("/files/", additionalFS))
 
 	// Siteyi sun
 	mux.HandleFunc("/", pageServe)
@@ -31,7 +37,7 @@ func main() {
 
 // Sayfaları sun
 func pageServe(w http.ResponseWriter, r *http.Request) {
-	baseDir := "./server"
+	baseDir := "../server"
 
 	var reqPath string = r.URL.Path
 	if reqPath == "/" {
@@ -39,10 +45,7 @@ func pageServe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cleanPath := path.Clean(reqPath)
-	fmt.Println("clean path: " + cleanPath)
-
 	fullPath := baseDir + cleanPath + "/index.html"
-	fmt.Println(fullPath)
 
 	if !fileExists(fullPath) {
 		http.Error(w, "Aradığınız sayfa bulunamadı.", 404)
